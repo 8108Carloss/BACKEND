@@ -10,6 +10,9 @@ import '../widgets/promo_banner.dart';
 import '../widgets/product_card.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../models/product.dart';
+import 'login_screen.dart';
+import 'register_screen.dart';
+import 'admin/admin_panel_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -139,7 +142,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       banners: _banners,
                       onCategorySelected: _onCategorySelected,
                     )
-                  : const _PlaceholderScreen(),
+                  : _navIndex == 3
+                      ? const _ProfileScreen()
+                      : const _PlaceholderScreen(),
             ),
           ],
         ),
@@ -496,6 +501,315 @@ class _PlaceholderScreen extends StatelessWidget {
       child: Text(
         'Proximamente',
         style: TextStyle(fontSize: 18, color: Colors.grey),
+      ),
+    );
+  }
+}
+
+class _ProfileScreen extends StatelessWidget {
+  const _ProfileScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+
+    if (!auth.isAuthenticated) {
+      return _GuestProfile();
+    }
+
+    return _AuthenticatedProfile(user: auth.user!);
+  }
+}
+
+class _GuestProfile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F0F0),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.person_outline, size: 44, color: Colors.grey),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Hola, invitado',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Inicia sesion para ver tus pedidos\ny acceder a tu cuenta',
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 36),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Iniciar sesion',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.black, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'Crear cuenta',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AuthenticatedProfile extends StatelessWidget {
+  final dynamic user;
+
+  const _AuthenticatedProfile({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    final isAdmin = user.role == 'admin';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    user.name.isNotEmpty
+                        ? user.name[0].toUpperCase()
+                        : 'U',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      user.email,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                    ),
+                    if (isAdmin)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'ADMIN',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          if (isAdmin) ...[
+            _ProfileMenuItem(
+              icon: Icons.admin_panel_settings_outlined,
+              label: 'Panel de administracion',
+              subtitle: 'Gestionar productos y categorias',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AdminPanelScreen()),
+              ),
+              accent: true,
+            ),
+            const SizedBox(height: 8),
+          ],
+          _ProfileMenuItem(
+            icon: Icons.shopping_bag_outlined,
+            label: 'Mis pedidos',
+            subtitle: 'Ver historial de compras',
+            onTap: () {},
+          ),
+          const SizedBox(height: 8),
+          _ProfileMenuItem(
+            icon: Icons.favorite_outline,
+            label: 'Lista de deseos',
+            subtitle: 'Productos guardados',
+            onTap: () {},
+          ),
+          const SizedBox(height: 8),
+          _ProfileMenuItem(
+            icon: Icons.location_on_outlined,
+            label: 'Mis direcciones',
+            subtitle: 'Gestionar direcciones de entrega',
+            onTap: () {},
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                await context.read<AuthService>().logout();
+              },
+              icon: const Icon(Icons.logout, size: 18),
+              label: const Text(
+                'Cerrar sesion',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFD32F2F),
+                side: const BorderSide(color: Color(0xFFFFCDD2), width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileMenuItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool accent;
+
+  const _ProfileMenuItem({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+    this.accent = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: accent ? Colors.black : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: accent ? Colors.black : const Color(0xFFEEEEEE),
+          ),
+          boxShadow: accent
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : [],
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: accent ? Colors.white : Colors.black87,
+              size: 24,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: accent ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: accent ? Colors.white60 : Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: accent ? Colors.white60 : Colors.grey[400],
+            ),
+          ],
+        ),
       ),
     );
   }

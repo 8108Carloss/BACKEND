@@ -65,4 +65,29 @@ class ProductService extends ChangeNotifier {
       return null;
     }
   }
+
+  Future<Product> createProduct(Map<String, dynamic> data) async {
+    final response = await ApiClient.post('/products', data);
+    final product = Product.fromJson(response['product']);
+    _products.insert(0, product);
+    notifyListeners();
+    return product;
+  }
+
+  Future<Product> updateProduct(String id, Map<String, dynamic> data) async {
+    final response = await ApiClient.put('/products/$id', data);
+    final updated = Product.fromJson(response['product']);
+    final index = _products.indexWhere((p) => p.id == id);
+    if (index != -1) {
+      _products[index] = updated;
+      notifyListeners();
+    }
+    return updated;
+  }
+
+  Future<void> deleteProduct(String id) async {
+    await ApiClient.delete('/products/$id');
+    _products.removeWhere((p) => p.id == id);
+    notifyListeners();
+  }
 }
