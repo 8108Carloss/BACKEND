@@ -415,6 +415,16 @@ class _ProductAdminCard extends StatelessWidget {
                   ? Image.network(
                       product.images.first,
                       fit: BoxFit.cover,
+                      loadingBuilder: (_, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: Image.asset(
+                            'assets/Geometric_shape_loader.gif',
+                            width: 40,
+                            height: 40,
+                          ),
+                        );
+                      },
                       errorBuilder: (_, __, ___) => const Icon(
                         Icons.inventory_2_outlined,
                         color: Color(0xFFBDBDBD),

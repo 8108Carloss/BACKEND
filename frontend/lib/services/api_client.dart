@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = 'https://backend-app-66b8.onrender.com/api';
 
   static String? _token;
 

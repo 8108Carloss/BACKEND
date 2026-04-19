@@ -58,6 +58,16 @@ class ProductCard extends StatelessWidget {
                         ? Image.network(
                             product.images.first,
                             fit: BoxFit.cover,
+                            loadingBuilder: (_, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: Image.asset(
+                                  'assets/Geometric_shape_loader.gif',
+                                  width: 64,
+                                  height: 64,
+                                ),
+                              );
+                            },
                             errorBuilder: (_, __, ___) => _ProductPlaceholder(
                               category: product.category,
                             ),
